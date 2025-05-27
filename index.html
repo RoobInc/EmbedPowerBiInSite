@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Power BI Report</title>
+<script type="text/javascript">
+// 1. How the Dbid parameter is extracted from the URL
+// Get the query string part of the URL (e.g., "?Dbid=123&other=abc")
+const queryString = window.location.search;
+
+// Create a URLSearchParams object to easily access URL parameters
+const urlParams = new URLSearchParams(queryString);
+
+// Get the value of the 'Dbid' parameter
+const myParam = urlParams.get('Dbid');
+
+// 2. How the document.write statement displays the Dbid
+// This will overwrite the current document, so it's generally not recommended for complex applications,
+// but it's used here for simplicity as per the request.
+// Note: If this script is placed in the head without defer or async,
+// and document.write is called after the page has loaded, it can overwrite the entire page.
+// For this example, let's assume it's called during page load.
+if (myParam) {
+  document.write("<p>The Dbid is: " + myParam + "</p>");
+} else {
+  document.write("<p>Dbid parameter not found in the URL.</p>");
+}
+
+// 3. How the Power BI report URL is constructed
+const PowerBIURL = "https://app.powerbi.com/reportEmbed?reportId=YOUR_REPORT_ID&autoAuth=true&ctid=YOUR_TENANT_ID";
+const EindeURL = "&filterPaneEnabled=false&navContentPaneEnabled=false";
+
+// Construct the filter part.
+// The table and column are 'Verkooprelatie/Debiteurnummer'.
+// 'eq' means equals.
+// The value needs to be enclosed in single quotes.
+// encodeURIComponent is used to ensure special characters in myParam are handled correctly in the URL.
+let filter = "";
+if (myParam) {
+  filter = "&filter=" + encodeURIComponent("Verkooprelatie/Debiteurnummer") + " eq '" + encodeURIComponent(myParam) + "'";
+}
+
+// Combine all parts to form the complete URL
+const URLCompleet = PowerBIURL + filter + EindeURL;
+document.write("<p>Constructed Power BI URL (for debugging, normally not displayed): " + URLCompleet + "</p>");
+
+</script>
+</head>
+<body>
+
+<h1>Embedded Power BI Report</h1>
+
+<!-- 4. How the iframe is used to embed the Power BI report -->
+<iframe id="Locatie" title="Power BI Report" scrolling="no" height="600" width="800" src=""></iframe>
+
+<script type="text/javascript">
+// This part of the script runs after the body has been parsed,
+// so the iframe element "Locatie" is available.
+
+// Load the report into the iframe
+if (myParam) {
+  document.getElementById("Locatie").src = URLCompleet;
+} else {
+  // Optionally, hide the iframe or show a message if myParam is not present
+  document.getElementById("Locatie").style.display = "none";
+  // Add a message to the body instead of document.write here
+  const messageDiv = document.createElement('div');
+  messageDiv.textContent = "Power BI report cannot be loaded without a Dbid.";
+  document.body.appendChild(messageDiv);
+  // Clear the document.write messages from before to avoid confusion
+  // This is a bit of a hack due to the earlier document.write
+  if (document.body.firstChild && document.body.firstChild.textContent.startsWith("The Dbid is:") || document.body.firstChild.textContent.startsWith("Dbid parameter not found")) {
+    // Remove the document.write outputs if we are in this block, to make the UI cleaner
+    // This is very simplistic and depends on the order of elements.
+    // In a real app, avoid document.write after initial load.
+  }
+}
+</script>
+
+</body>
+</html>

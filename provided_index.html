@@ -1,0 +1,71 @@
+<html>
+<body>
+
+<!--Debiteurcode ophalen-->
+<p id="dbidDisplay"></p>
+<script>
+// This script block handles the extraction of the 'Dbid' URL parameter,
+// sanitizes it, constructs the Power BI report URL, and updates the display message.
+
+// Variable to store the complete Power BI URL
+let URLCompleet;
+
+// Get the 'Dbid' parameter from the current URL's query string
+const urlParams = new URLSearchParams(window.location.search);
+const myParam = urlParams.get('Dbid'); // 'Dbid' is the customer identifier
+
+// Get a reference to the HTML element used to display messages
+const displayElement = document.getElementById('dbidDisplay');
+
+// Check if the 'Dbid' parameter was found and is not empty
+if (!myParam || myParam.trim() === "") {
+  // 'Dbid' is missing or empty
+  if (displayElement) {
+    displayElement.textContent = "Verkooprelatie ID niet gevonden in URL. Rapport kan niet geladen worden."; // Dutch: "Customer ID not found in URL. Report cannot be loaded."
+  }
+  URLCompleet = ""; // Set URL to empty to prevent loading an invalid report
+} else {
+  // 'Dbid' is present
+  if (displayElement) {
+    displayElement.textContent = "Verkooprelatie: " + myParam; // Display the found Dbid
+  }
+  
+  // Sanitize the Dbid parameter: Escape single quotes for OData filter compatibility.
+  // In OData, a single quote in a string literal is represented by two single quotes.
+  const sanitizedMyParam = myParam.replace(/'/g, "''"); 
+
+  // Define the base Power BI report URL and the suffix for the filter parameter
+  // Note: The reportId and ctid (tenantId) are specific to your Power BI setup.
+  // The filter part 'Verkooprelatie/Debiteurnummer%20eq%20%27' decodes to 'Verkooprelatie/Debiteurnummer eq ''
+  const PowerBIURL = "https://app.powerbi.com/reportEmbed?reportId=a485b383-e21c-41c7-b0f3-ce7e7a8ee243&autoAuth=true&ctid=e7397b50-73eb-4db7-84c5-cbd8fece46a7" + "&filter=Verkooprelatie/Debiteurnummer%20eq%20%27";
+  const EindeURL = "%27"; // This decodes to a single quote ' to close the OData filter string
+  
+  // Construct the full Power BI URL with the sanitized Dbid
+  URLCompleet = PowerBIURL + sanitizedMyParam + EindeURL;
+}
+
+</script>
+
+<br>
+
+<iframe id="Locatie" scrolling="yes" height="800" width ="1200" src=""></iframe>
+
+<script>
+// This script block handles loading the Power BI report into the iframe
+// or hides the iframe if the 'Dbid' was missing (and thus URLCompleet is empty).
+
+// Check if a valid Power BI URL was constructed
+if (URLCompleet && URLCompleet !== "") {
+  // If the URL is valid, set it as the source for the iframe to load the report
+  document.getElementById("Locatie").src = URLCompleet;
+} else {
+  // If Dbid was missing or URL is invalid, hide the iframe
+  const iframeElement = document.getElementById("Locatie");
+  if (iframeElement) {
+    iframeElement.style.display = 'none'; // Hide the iframe element
+  }
+}
+</script>
+
+</body>
+</html>
